@@ -1,0 +1,15 @@
+.DS_Store
+
+build/
+node_modules/
+
+dist/
+.vscode/
+
+*.vgm
+*.mub
+*.muc
+*.wav
+*.bak
+
+lib/mucom88.js

@@ -1,0 +1,36 @@
+{
+  "name": "mucom88-js",
+  "version": "0.1.0",
+  "description": "MUCOM88 module for JavaScript",
+  "main": "dist/index.js",
+  "files": [
+    "README.md",
+    "package.json",
+    "LICENSE.md",
+    "dist",
+    "lib"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:emscripten": "mkdirp build && cd build && emcmake cmake .. && cmake --build . && cpy mucom88.js ../lib/"
+  },
+  "keywords": [],
+  "author": "Mitsutaka Okazaki",
+  "license": "CC BY-NC-SA 4.0",
+  "devDependencies": {
+    "@types/emscripten": "^1.39.6",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "cpy-cli": "^4.2.0",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
+    "mkdirp": "^2.1.5",
+    "prettier": "^2.8.7",
+    "rimraf": "^4.4.1",
+    "typedoc": "^0.23.27",
+    "typescript": "^4.9.0"
+  },
+  "engines": {
+    "node": ">=14.18.2"
+  }
+}
