@@ -36,6 +36,7 @@ set(linker_flag_list
   # -sSAFE_HEAP=1
   -sSINGLE_FILE=1 
   -sFILESYSTEM=1
+  -sEXPORT_ES6=1
   # -sRESERVED_FUNCTION_POINTERS=16 
   -sMODULARIZE=1 
   -sEXPORT_NAME=moduleFactory
