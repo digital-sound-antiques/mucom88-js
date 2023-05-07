@@ -27,6 +27,7 @@ public:
   int LoadMML(const std::string &mml);
   val Render(int samples);
   std::string GetMessageBuffer();
+  std::string GetInfoBuffer();
   void SetDriverMode(int mode);
   val Compile(const std::string &mml);
   int LoadImpl(const std::vector<uint8_t> &mub);
@@ -84,7 +85,8 @@ val CMucomWrap::Compile(const std::string &mml)
   printf("CMucomWrap::Compile\n");
   const char *tempfile = "temp.mub";
   int res = this->CompileImpl(mml, tempfile, 0);
-  if (res != 0) {
+  if (res != 0)
+  {
     std::vector<uint8_t> vec;
     return val(typed_memory_view(vec.size(), vec.data()));
   }
@@ -121,9 +123,13 @@ int CMucomWrap::LoadMML(const std::string &mml)
   return mucom->Play(0);
 }
 
+std::string CMucomWrap::GetInfoBuffer()
+{
+  return std::string(mucom->GetInfoBuffer());
+}
+
 std::string CMucomWrap::GetMessageBuffer()
 {
-  printf("CMucomWrap::GetMessageBuffer");
   return std::string(mucom->GetMessageBuffer());
 }
 
@@ -181,6 +187,7 @@ EMSCRIPTEN_BINDINGS(cmucom_module)
       .function("load", &CMucomWrap::Load)
       .function("loadMML", &CMucomWrap::LoadMML)
       .function("getMessageBuffer", &CMucomWrap::GetMessageBuffer)
+      .function("getInfoBuffer", &CMucomWrap::GetInfoBuffer)
       .function("setDriverMode", &CMucomWrap::SetDriverMode)
       .function("getStatus", &CMucomWrap::GetStatus)
       .function("render", &CMucomWrap::Render);

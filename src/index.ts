@@ -47,6 +47,10 @@ export class Mucom88 {
     return this.mucom!.getMessageBuffer().replace(/\r\n/g, '\n');
   }
 
+  getInfoBuffer(): string {
+    return this.mucom!.getInfoBuffer().replace(/\r\n/g, '\n');
+  }
+
   getStatus(type: MucomStatusType): number {
     return this.mucom!.getStatus(type);
   }

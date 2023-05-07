@@ -22,6 +22,7 @@ export interface CMucom {
   load(mub: Uint8Array): number;
   render(samples: number): Int16Array;
   getMessageBuffer(): string;
+  getInfoBuffer(): string;
   getStatus(type: MucomStatusType): number;
   delete(): void;
 }
