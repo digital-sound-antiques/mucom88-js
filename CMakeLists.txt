@@ -37,6 +37,7 @@ set(linker_flag_list
   -sSINGLE_FILE=1 
   -sFILESYSTEM=1
   -sEXPORT_ES6=1
+  -sENVIRONMENT=web # Force to exclude node dependencies
   # -sRESERVED_FUNCTION_POINTERS=16 
   -sMODULARIZE=1 
   -sEXPORT_NAME=moduleFactory
