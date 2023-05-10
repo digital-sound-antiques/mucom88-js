@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build:all",
     "build:all": "npm run build:emscripten && npm run build",
     "build:emscripten": "mkdirp build && cd build && emcmake cmake .. && cmake --build . && cpy mucom88.js ../lib/",
     "build": "tsc"
