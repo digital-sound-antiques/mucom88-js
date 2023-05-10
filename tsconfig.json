@@ -2,7 +2,6 @@
   "exclude": ["build", "docs", "dist", "**/__tests__/**/*"],
   "include": ["src/**/*.ts"],
   "compilerOptions": {
-    "paths": { "sha1": ["./types/sha1"] },
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,

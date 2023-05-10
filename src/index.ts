@@ -40,15 +40,55 @@ export class Mucom88 {
   }
 
   render(samples: number): Int16Array {
+    if (samples > 192000) {
+      throw new Error("Samples too long.");
+    }
     return this.mucom!.render(samples);
   }
 
   getMessageBuffer(): string {
-    return this.mucom!.getMessageBuffer().replace(/\r\n/g, '\n');
+    return this.mucom!.getMessageBuffer().replace(/\r\n/g, "\n");
   }
 
   getInfoBuffer(): string {
-    return this.mucom!.getInfoBuffer().replace(/\r\n/g, '\n');
+    return this.mucom!.getInfoBuffer().replace(/\r\n/g, "\n");
+  }
+
+  getChannelCounts(): {
+    totalCounts: number[];
+    loopCounts: number[];    
+    maxch: 11;
+  } {
+    const maxch = 11;
+    const lines = this.getMessageBuffer().split(/\n/);
+    const totalCounts = new Array<number>(maxch);
+    const loopCounts = new Array<number>(maxch);
+
+    const parseCounts = (line: string, counters: number[]) => {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length == maxch) {
+        for (let i = 0; i < maxch; i++) {
+          counters[i] = parseInt(parts[i].split(":")[1]);
+        }
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (/^\[\s*Total\s+count\s*\]/i.test(line)) {
+        i++;
+        parseCounts(lines[i], totalCounts);
+      } else if (/^\[\s*Loop\s+count\s*\]/i.test(line)) {
+        i++;
+        parseCounts(lines[i], loopCounts);
+      }
+    }
+
+    return {
+      totalCounts,
+      loopCounts,
+      maxch,
+    };
   }
 
   getStatus(type: MucomStatusType): number {
