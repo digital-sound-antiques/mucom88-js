@@ -24,6 +24,7 @@ export interface CMucom {
   getMessageBuffer(): string;
   getInfoBuffer(): string;
   getStatus(type: MucomStatusType): number;
+  getChannelData(ch: number): Object;
   delete(): void;
 }
 

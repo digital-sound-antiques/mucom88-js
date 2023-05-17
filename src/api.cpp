@@ -33,6 +33,7 @@ public:
   int LoadImpl(const std::vector<uint8_t> &mub);
   int Load(const val &inp);
   int GetStatus(int type);
+  PCHDATA GetChannelData(int ch);
 
 private:
   int CompileImpl(const std::string &mml, const char *output, int options);
@@ -178,8 +179,31 @@ int CMucomWrap::GetStatus(int type)
   return mucom->GetStatus(type);
 }
 
+PCHDATA CMucomWrap::GetChannelData(int ch)
+{
+  PCHDATA pch;
+  mucom->GetChannelData(ch, &pch);
+  pch.chnum = ch;
+  return pch;
+}
+
 EMSCRIPTEN_BINDINGS(cmucom_module)
 {
+  value_object<PCHDATA>("PCHDATA")
+    .field("vnum", &PCHDATA::vnum)
+    .field("volume", &PCHDATA::volume)
+    .field("wadr", &PCHDATA::wadr)
+    .field("tadr", &PCHDATA::tadr)
+    .field("lfo_diff", &PCHDATA::lfo_diff)
+    .field("quantize", &PCHDATA::quantize)
+    .field("chnum", &PCHDATA::chnum)
+    .field("detune", &PCHDATA::detune)
+    .field("reverb", &PCHDATA::reverb)
+    .field("pan", &PCHDATA::pan)
+    .field("keyon", &PCHDATA::keyon)
+    .field("vol_org", &PCHDATA::vol_org)
+    .field("vnum_org", &PCHDATA::vnum_org);
+
   class_<CMucomWrap>("CMucom")
       .constructor<>()
       .function("reset", &CMucomWrap::Reset)
@@ -190,5 +214,6 @@ EMSCRIPTEN_BINDINGS(cmucom_module)
       .function("getInfoBuffer", &CMucomWrap::GetInfoBuffer)
       .function("setDriverMode", &CMucomWrap::SetDriverMode)
       .function("getStatus", &CMucomWrap::GetStatus)
-      .function("render", &CMucomWrap::Render);
+      .function("render", &CMucomWrap::Render)
+      .function("getChannelData", &CMucomWrap::GetChannelData);
 }

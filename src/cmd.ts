@@ -153,6 +153,7 @@ export async function main() {
       if (count >= maxCount) {
         break;
       }
+      console.log(mucom.getChannelData(0));
     }
 
     const wav = new WaveFile();

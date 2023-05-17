@@ -1,6 +1,22 @@
 import { CMucom, MucomStatusType, getModule, initModule } from "./module.js";
 export { MucomStatusType } from "./module.js";
 
+export type PCHDATA = {
+  vnum: number;
+  volume: number;
+  wadr: number;
+  tadr: number;
+  chnum: number;
+  detune: number;
+  reverb: number;
+  lfo_diff: number;
+  quantize: number;
+  pan: number;
+  keyon: number;
+  vnum_org: number;
+  vol_org: number;
+};
+
 export class Mucom88 {
   static async initialize() {
     await initModule();
@@ -89,6 +105,10 @@ export class Mucom88 {
       loopCounts,
       maxch,
     };
+  }
+
+  getChannelData(ch: number): PCHDATA {
+    return this.mucom!.getChannelData(ch) as PCHDATA;
   }
 
   getStatus(type: MucomStatusType): number {
