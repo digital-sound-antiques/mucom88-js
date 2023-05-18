@@ -15,6 +15,26 @@ export enum MucomStatusType {
   AUDIOMS = 11,
 };
 
+export type CHDATA = {
+  length: number;
+  vnum: number;
+  volume: number;
+  wadr: number;
+  tadr: number;
+  chnum: number;
+  detune: number;
+  reverb: number;
+  lfo_diff: number;
+  quantize: number;
+  pan: number;
+  flag: number;
+  flag2: number;
+  code: number;
+  note: number;
+  vnum_org: number;
+  vol_org: number;
+};
+
 export interface CMucom {
   reset(sampleRate: number): void;
   loadMML(mml: string): number;
@@ -24,7 +44,7 @@ export interface CMucom {
   getMessageBuffer(): string;
   getInfoBuffer(): string;
   getStatus(type: MucomStatusType): number;
-  getChannelData(ch: number): Object;
+  getChannelData(ch: number): CHDATA;
   delete(): void;
 }
 
