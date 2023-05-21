@@ -32,12 +32,14 @@ public:
   val Compile(const std::string &mml);
   int LoadImpl(const std::vector<uint8_t> &mub);
   int Load(const val &inp);
+  val GenerateLogFile(const val &mub, int type, int maxCount);
   int GetStatus(int type);
   PCHDATA GetChannelData(int ch);
 
 private:
   int CompileImpl(const std::string &mml, const char *output, int options);
   CMucom *mucom;
+  std::vector<uint8_t> refVec;
 };
 
 CMucomWrap::CMucomWrap(void)
@@ -81,6 +83,46 @@ std::vector<uint8_t> loadFileAsVector(const char *file)
   return vec;
 }
 
+val CMucomWrap::GenerateLogFile(const val &u8, int type, int maxCount)
+{
+  printf("CMucomWrap::GenerateLogFile: %d\n", type);
+
+  const char *logfile = type == 0 ? "temp.vgm" : "temp.s98";
+  mucom->SetLogFilename(logfile); // attach logwriter
+
+  int res = this->Load(u8);
+  if (res != 0)
+  {
+    // return empty vector
+    std::vector<uint8_t> vec;
+    return val(typed_memory_view(vec.size(), vec.data()));
+  }
+
+  int time = 0;       // in ms
+  int timeToExit = 0; // in ms
+
+  while (time < 10 * 60 * 1000)
+  { // max 10 min
+    if (timeToExit != 0 && time > timeToExit)
+    {
+      break;
+    }
+
+    mucom->UpdateTime(1);
+    time += 1;
+    int count = mucom->GetStatus(MUCOM_STATUS_INTCOUNT);
+    if (count > maxCount && timeToExit == 0)
+    {
+      timeToExit = time + 1000;
+    }
+  }
+
+  mucom->SetLogFilename(nullptr); // detach logwriter
+
+  refVec = loadFileAsVector(logfile);
+  return val(typed_memory_view(refVec.size(), refVec.data()));
+}
+
 val CMucomWrap::Compile(const std::string &mml)
 {
   printf("CMucomWrap::Compile\n");
@@ -88,11 +130,12 @@ val CMucomWrap::Compile(const std::string &mml)
   int res = this->CompileImpl(mml, tempfile, 0);
   if (res != 0)
   {
+    // return empty vector
     std::vector<uint8_t> vec;
     return val(typed_memory_view(vec.size(), vec.data()));
   }
-  auto vec = loadFileAsVector(tempfile);
-  return val(typed_memory_view(vec.size(), vec.data()));
+  refVec = loadFileAsVector(tempfile);
+  return val(typed_memory_view(refVec.size(), refVec.data()));
 }
 
 int CMucomWrap::Load(const val &u8)
@@ -214,6 +257,7 @@ EMSCRIPTEN_BINDINGS(cmucom_module)
       .function("compile", &CMucomWrap::Compile)
       .function("load", &CMucomWrap::Load)
       .function("loadMML", &CMucomWrap::LoadMML)
+      .function("generateLogFile", &CMucomWrap::GenerateLogFile)
       .function("getMessageBuffer", &CMucomWrap::GetMessageBuffer)
       .function("getInfoBuffer", &CMucomWrap::GetInfoBuffer)
       .function("setDriverMode", &CMucomWrap::SetDriverMode)

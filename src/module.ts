@@ -15,6 +15,11 @@ export enum MucomStatusType {
   AUDIOMS = 11,
 };
 
+export enum MucomLogFileType {
+  VGM = 0,
+  S98 = 1, 
+};
+
 export type CHDATA = {
   length: number;
   vnum: number;
@@ -40,6 +45,7 @@ export interface CMucom {
   loadMML(mml: string): number;
   compile(mml: string): Uint8Array;
   load(mub: Uint8Array): number;
+  generateLogFile(mub: Uint8Array, type: MucomLogFileType, maxCount: number): Uint8Array;
   render(samples: number): Int16Array;
   getMessageBuffer(): string;
   getInfoBuffer(): string;

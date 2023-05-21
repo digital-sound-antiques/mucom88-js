@@ -5,6 +5,7 @@ import { basename, dirname } from "path";
 import pkg from "wavefile";
 import { detectEncoding } from "./detect-encoding.js";
 import { Mucom88 } from "./index.js";
+import { MucomLogFileType, MucomStatusType } from "./module.js";
 const { WaveFile } = pkg;
 
 function findAttachments(mml: string) {
@@ -28,36 +29,28 @@ const optionDefinitions = [
     description: "Specify a .muc file to be processed.",
     type: String,
     defaultOption: true,
+    typeLabel: "file",
   },
   {
     name: "output",
     alias: "o",
-    description: "Specify output filename.",
+    description: "Specify an output filename (without extension).",
     type: String,
+    typeLabel: "file",
   },
   {
     name: "encoding",
     alias: "e",
-    description: "Specify an encoding of input .muc file.",
+    description: "Specify an encoding of input .muc file. (default: auto)",
     type: String,
+    typeLabel: "auto|utf-8|shift-jis",
   },
   {
-    name: "wav",
-    description: "Ouptut .wav file",
-    type: Boolean,
-    defaultValue: false,
-  },
-  {
-    name: "vgm",
-    description: "Ouptut .vgm file",
-    type: Boolean,
-    defaultValue: false,
-  },
-  {
-    name: "mub",
-    description: "Ouptut .mub file",
-    type: Boolean,
-    defaultValue: true,
+    name: "type",
+    description: "Ouptut file type (default: wav)",
+    type: String,
+    defaultValue: "wav",
+    typeLabel: "wav|mub|vgm|s98",
   },
   {
     name: "help",
@@ -124,66 +117,60 @@ export async function main() {
 
   mucom.reset(sampleRate);
 
-  if (true) {
-    const mub = mucom.compile(mml);
-    console.log(mucom.getMessageBuffer());
-    if (mub == null) {            
-      process.exit(1);
-    }
-    // load mub does not work for some file.
-    // TODO: investigate reason.
-    mucom.load(mub!);
-  } else {
-    mucom.loadMML(mml);
-    console.log(mucom.getMessageBuffer());
-  }
+  try {
+    if (options.type == "wav") {
+      mucom.loadMML(mml);
+      console.log(mucom.getMessageBuffer());
 
-  if (options.wav) {
-    const ch = 2;
-    const seconds = 60;
-    const res = new Int16Array(sampleRate * ch * seconds);
-    const maxCount = mucom.getStatus(6); // MAXCOUNT
-    const start = Date.now();
+      const ch = 2;
+      const maxSeconds = 60 * 5;
+      const res = new Int16Array(sampleRate * ch * maxSeconds);
+      const { maxCount } = mucom.getCountData();
+      const start = Date.now();
 
-    let time = 0;
-    for (time = 0; time < seconds; time++) {
-      const buf = mucom.render(sampleRate);
-      res.set(buf, time * sampleRate * ch);
-      const count = mucom.getStatus(1);
-      console.log(`${count}/${maxCount}`);
-      if (count >= maxCount) {
-        break;
+      let time = 0;
+      for (time = 0; time < maxSeconds; time++) {
+        const buf = mucom.render(sampleRate);
+        res.set(buf, time * sampleRate * ch);
+        const count = mucom.getStatus(MucomStatusType.INTCOUNT);
+        console.log(`${count}/${maxCount}`);
+        if (count >= maxCount) {
+          break;
+        }
       }
+
+      const elapsed = Date.now() - start;
+      console.log(
+        `elapsed: ${elapsed}ms (${((time * 1000) / elapsed).toFixed(
+          2
+        )}x faster than realtime)`
+      );
+      const wav = new WaveFile();
+      const length = sampleRate * ch * (time + 1);
+      wav.fromScratch(2, sampleRate, "16", res.slice(0, length));
+      fs.writeFileSync(`${output}.wav`, wav.toBuffer());
+    } else if (options.type == "mub") {
+      const mub = mucom.compile(mml);
+      console.log(mucom.getMessageBuffer());
+      fs.writeFileSync(`${output}.mub`, mub);
+    } else if (options.type == "s98") {
+      const mub = mucom.compile(mml);
+      console.log(mucom.getMessageBuffer());
+      const { maxCount } = mucom.getCountData();
+      const vgm = mucom.generateLogFile(mub, MucomLogFileType.S98, maxCount);
+      fs.writeFileSync(`${output}.s98`, vgm);
+    } else if (options.type == "vgm") {
+      const mub = mucom.compile(mml);
+      console.log(mucom.getMessageBuffer());
+      const { maxCount } = mucom.getCountData();
+      const vgm = mucom.generateLogFile(mub, MucomLogFileType.VGM, maxCount);
+      fs.writeFileSync(`${output}.vgm`, vgm);
     }
-
-    const elapsed = Date.now() - start;
-    console.log(`elapsed: ${elapsed}ms (${time * 1000/elapsed}x faster than realtime)`);
-
-    const wav = new WaveFile();
-    const length = sampleRate * ch * (time + 1);
-    wav.fromScratch(2, sampleRate, "16", res.slice(0, length));
-    fs.writeFileSync(`${output}.wav`, wav.toBuffer());
+  } catch (e) {
+    console.log(e);
   }
 
   mucom.release();
-
-  if (options.mub) {
-    try {
-      const mub = readMemFile("/temp.mub");
-      fs.writeFileSync(`${output}.mub`, mub);
-    } catch (e) {
-      console.log(".mub is not generated.");
-    }
-  }
-
-  if (options.vgm) {
-    try {
-      const vgm = readMemFile("/temp.vgm");
-      fs.writeFileSync(`${output}.vgm`, vgm);
-    } catch (e) {
-      console.log(".vgm is not generated.");
-    }
-  }
 }
 
 function readMemFile(path: string) {

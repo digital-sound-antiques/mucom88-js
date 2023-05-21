@@ -7,6 +7,7 @@ dist/
 .vscode/
 
 *.vgm
+*.s98
 *.mub
 *.muc
 *.wav

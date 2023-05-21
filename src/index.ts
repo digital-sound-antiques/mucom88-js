@@ -1,4 +1,11 @@
-import { CHDATA, CMucom, MucomStatusType, getModule, initModule } from "./module.js";
+import {
+  CHDATA,
+  CMucom,
+  MucomLogFileType,
+  MucomStatusType,
+  getModule,
+  initModule,
+} from "./module.js";
 export { CHDATA, MucomStatusType } from "./module.js";
 
 export class Mucom88 {
@@ -30,13 +37,33 @@ export class Mucom88 {
     return this.mucom!.loadMML(mml) == 0;
   }
 
-  compile(mml: string): Uint8Array | null {
+  compile(mml: string): Uint8Array {
     const u8a = this.mucom!.compile(mml);
-    return u8a.length > 0 ? u8a : null;
+    if (u8a.length == 0) {
+      throw new Error("Compile error.");
+    }
+    return u8a.slice();
   }
 
   load(mub: Uint8Array): boolean {
     return this.mucom!.load(mub) == 0;
+  }
+
+  generateLogFile(
+    mub: Uint8Array,
+    type: MucomLogFileType,
+    maxCount: number
+  ): Uint8Array {
+    for (const file of ["temp.vgm", "temp.s98"]) {
+      try {
+        Mucom88.FS.unlink(file);
+      } catch (e) {}
+    }
+    const u8a = this.mucom!.generateLogFile(mub, type, maxCount);
+    if (u8a.length == 0) {
+      throw new Error("Failed to generate logfile.");
+    }
+    return u8a.slice();
   }
 
   render(samples: number): Int16Array {
@@ -54,9 +81,14 @@ export class Mucom88 {
     return this.mucom!.getInfoBuffer().replace(/\r\n/g, "\n");
   }
 
-  getChannelCounts(): {
+  /**
+   * Get count info of the compiled music.
+   */
+  getCountData(): {
     totalCounts: number[];
-    loopCounts: number[];    
+    loopCounts: number[];
+    maxCount: number;
+    hasGlobalLoop: boolean;
     maxch: 11;
   } {
     const maxch = 11;
@@ -84,9 +116,20 @@ export class Mucom88 {
       }
     }
 
+    let maxCount = 0;
+    for (let i = 0; i < maxch; i++) {
+      const sum = totalCounts[i] + loopCounts[i];
+      if (maxCount < sum) {
+        maxCount = sum;
+      }
+    }
+    let hasGlobalLoop = loopCounts.every((e) => e == 0);
+
     return {
       totalCounts,
       loopCounts,
+      maxCount,
+      hasGlobalLoop,
       maxch,
     };
   }
