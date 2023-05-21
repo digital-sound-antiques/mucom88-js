@@ -140,24 +140,27 @@ export async function main() {
 
   if (options.wav) {
     const ch = 2;
-    const seconds = 180;
+    const seconds = 60;
     const res = new Int16Array(sampleRate * ch * seconds);
     const maxCount = mucom.getStatus(6); // MAXCOUNT
+    const start = Date.now();
 
-    let elapsed = 0;
-    for (elapsed = 0; elapsed < seconds; elapsed++) {
+    let time = 0;
+    for (time = 0; time < seconds; time++) {
       const buf = mucom.render(sampleRate);
-      res.set(buf, elapsed * sampleRate * ch);
+      res.set(buf, time * sampleRate * ch);
       const count = mucom.getStatus(1);
       console.log(`${count}/${maxCount}`);
       if (count >= maxCount) {
         break;
       }
-      console.log(mucom.getChannelData(0));
     }
 
+    const elapsed = Date.now() - start;
+    console.log(`elapsed: ${elapsed}ms (${time * 1000/elapsed}x faster than realtime)`);
+
     const wav = new WaveFile();
-    const length = sampleRate * ch * (elapsed + 1);
+    const length = sampleRate * ch * (time + 1);
     wav.fromScratch(2, sampleRate, "16", res.slice(0, length));
     fs.writeFileSync(`${output}.wav`, wav.toBuffer());
   }
