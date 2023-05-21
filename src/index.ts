@@ -123,7 +123,7 @@ export class Mucom88 {
         maxCount = sum;
       }
     }
-    let hasGlobalLoop = loopCounts.every((e) => e == 0);
+    let hasGlobalLoop = loopCounts.some((e) => e != 0);
 
     return {
       totalCounts,
