@@ -120,7 +120,7 @@ export async function main() {
   }
 
   const mucom = new Mucom88();
-  const sampleRate = 55467; // 44100;
+  const sampleRate = 44100;
 
   mucom.reset(sampleRate);
 
